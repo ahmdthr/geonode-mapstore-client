@@ -8,6 +8,8 @@
 
 export const RESOURCE_LOADING = 'GEONODE:RESOURCE_LOADING';
 export const SET_RESOURCE = 'GEONODE:SET_RESOURCE';
+export const BACKUP_RESOURCE = 'GEONODE:BACKUP_RESOURCE';
+export const RESTORE_RESOURCE = 'GEONODE:RESTORE_RESOURCE';
 export const RESOURCE_ERROR = 'GEONODE:RESOURCE_ERROR';
 export const UPDATE_RESOURCE_PROPERTIES = 'GEONODE:UPDATE_RESOURCE_PROPERTIES';
 export const SET_RESOURCE_TYPE = 'GEONODE:SET_RESOURCE_TYPE';
@@ -61,6 +63,24 @@ export function setResource(data, pending) {
         type: SET_RESOURCE,
         data,
         pending
+    };
+}
+
+/**
+* Backs up resource in the state
+*/
+export function backupResource() {
+    return {
+        type: BACKUP_RESOURCE
+    };
+}
+
+/**
+* Restores resource from the state
+*/
+export function restoreResource() {
+    return {
+        type: RESTORE_RESOURCE
     };
 }
 

@@ -178,6 +178,7 @@ function DetailsPanel({
     editThumbnail,
     activeEditMode,
     closePanel,
+    afterClosePanel,
     favorite,
     onFavorite,
     enableFavorite,
@@ -199,6 +200,11 @@ function DetailsPanel({
     const [titleNodeRef, titleInView] = useInView();
     if (!resource && !loading) {
         return null;
+    }
+
+    const closeDetailPanel = () => {
+        closePanel()
+        afterClosePanel()
     }
 
     const types = getTypesInfo();
@@ -247,7 +253,7 @@ function DetailsPanel({
                     <Button
                         variant="default"
                         href={linkHref ? linkHref() : undefined}
-                        onClick={closePanel}
+                        onClick={closeDetailPanel}
                         className="square-button">
                         <Glyphicon glyph="1-close" />
                     </Button>

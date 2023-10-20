@@ -12,6 +12,8 @@ import isEmpty from 'lodash/isEmpty';
 import {
     RESOURCE_LOADING,
     SET_RESOURCE,
+    BACKUP_RESOURCE,
+    RESTORE_RESOURCE,
     RESOURCE_ERROR,
     UPDATE_RESOURCE_PROPERTIES,
     SET_RESOURCE_TYPE,
@@ -81,6 +83,19 @@ function gnresource(state = defaultState, action) {
             data: updatedResource,
             loading: false,
             isNew: false
+        };
+    }
+    case BACKUP_RESOURCE: {
+        const backupResource = state.data
+        return {...state,
+            backupResource: backupResource
+        };
+    }
+    case RESTORE_RESOURCE: {
+        const backupResource = state.backupResource
+        return {...state,
+            data: backupResource,
+            backupResource: null
         };
     }
     case RESOURCE_ERROR: {
