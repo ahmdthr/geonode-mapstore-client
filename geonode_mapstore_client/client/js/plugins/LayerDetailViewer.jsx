@@ -12,7 +12,6 @@ import { connect } from 'react-redux';
 import { createSelector } from 'reselect';
 import { getConfigProp } from '@mapstore/framework/utils/ConfigUtils';
 import DetailsPanel from '@js/components/DetailsPanel';
-import { userSelector } from '@mapstore/framework/selectors/security';
 import {
     editTitleResource,
     editAbstractResource,
@@ -30,7 +29,6 @@ import { setControlProperty } from '@mapstore/framework/actions/controls';
 import gnresource from '@js/reducers/gnresource';
 import gnsearch from '@js/reducers/gnsearch';
 import {
-    canEditResource,
     getResourceId,
     isThumbnailChanged,
     updatingThumbnailResource
@@ -48,14 +46,15 @@ import { mapSelector } from '@mapstore/framework/selectors/map';
 import { resourceHasPermission } from '@js/utils/ResourceUtils';
 import { parsePluginConfigExpressions } from '@js/utils/MenuUtils';
 import tooltip from '@mapstore/framework/components/misc/enhancers/tooltip';
-import layerDetailViewerEpics from '@js/epics/layerdetailviewer';
+import layerDetailViewerEpics from '@js/epics/layerdetailViewer';
+import Spinner from '@js/components/Spinner/Spinner';
 
 const Button = tooltip(GNButton);
 
 const ConnectedDetailsPanel = connect(
     createSelector([
         state => state?.gnresource?.layerDataset || null,
-        state => state?.gnresource?.loading || false,
+        state => state?.gnresource?.loadingLayerDatasetResourceConfig || false,
         state => state?.gnresource?.layerDataset?.favorite || false,
         state => state?.gnsave?.savingThumbnailMap || false,
         isThumbnailChanged,
@@ -74,7 +73,7 @@ const ConnectedDetailsPanel = connect(
         enableMapViewer: showMapThumbnail,
         downloading,
         canDownload: resourceHasPermission(resource, 'download_resourcebase'),
-        resourceId: resource.pk
+        resourceId: resource?.pk
     })),
     {
         closePanel: setControlProperty.bind(null, 'rightOverlay', 'enabled', false),
@@ -86,7 +85,7 @@ const ConnectedDetailsPanel = connect(
     }
 )(DetailsPanel);
 
-const ButtonViewer = ({ onClick, layer, size, status, showMessage }) => {
+const ButtonViewer = ({ onClick, layer, size, status, showMessage, loading }) => {
     const layerResourceId = layer?.extendedParams?.pk;
     const handleClickButton = () => {
         onClick();
@@ -98,16 +97,24 @@ const ButtonViewer = ({ onClick, layer, size, status, showMessage }) => {
             className="square-button-md"
             size={size}
             onClick={handleClickButton}
+            disabled={loading}
             tooltipId={<Message msgId={`gnviewer.info`} />}
         >
-            {!showMessage ? <FaIcon name="info-circle" /> : <Message msgId="gnviewer.editInfo"/>}
+            {loading
+                ? <Spinner />
+                : !showMessage ? <FaIcon name="info-circle" /> : <Message msgId="gnviewer.editInfo"/>
+            }
         </Button>
     ) : null;
 };
 
 const ConnectedButton = connect(
-    createSelector([getUpdatedLayer], (layer) => ({
-        layer: layer
+    createSelector([
+        getUpdatedLayer,
+        (state) => state?.gnresource?.loadingLayerDatasetResourceConfig || false
+    ], (layer, loading) => ({
+        layer,
+        loading
     })),
     {
         onClick: setControlProperty.bind(
@@ -125,8 +132,6 @@ function LayerDetailViewer({
     onEditResource,
     onEditAbstractResource,
     onEditThumbnail,
-    canEdit,
-    user,
     onClose,
     monitoredState,
     queryPathname = '/',
@@ -169,8 +174,8 @@ function LayerDetailViewer({
                 editTitle={handleTitleValue}
                 editAbstract={handleAbstractValue}
                 editThumbnail={handleEditThumbnail}
-                activeEditMode={enabled && canEdit}
-                enableFavorite={!!user}
+                activeEditMode={false}
+                enableFavorite={false}
                 formatHref={handleFormatHref}
                 tabs={parsedConfig.tabs}
                 pathname={queryPathname}
@@ -184,17 +189,13 @@ const LayerDetailViewerPlugin = connect(
         [
             (state) =>
                 state?.controls?.rightOverlay?.enabled === 'LayerDetailViewer',
-            canEditResource,
             getUpdatedLayer,
             getResourceId,
-            userSelector,
             state => getMonitoredState(state, getConfigProp('monitorState'))
         ],
-        (enabled, canEdit, layer, user, monitoredState) => ({
+        (enabled, layer, monitoredState) => ({
             enabled,
-            canEdit,
             layer,
-            user,
             monitoredState
         })
     ),

@@ -34,7 +34,8 @@ import {
     ENABLE_MAP_THUMBNAIL_VIEWER,
     SET_RESOURCE_EXTENT,
     SET_RESOURCE_PATH_PARAMETERS,
-    SET_MAP_VIEWER_LINKED_RESOURCE
+    SET_MAP_VIEWER_LINKED_RESOURCE,
+    LOADING_LAYER_RESOURCE_CONFIG
 } from '@js/actions/gnresource';
 import {
     cleanCompactPermissions,
@@ -101,6 +102,12 @@ function gnresource(state = defaultState, action) {
             initialLayerResource: { ...action.data },
             layerDataset: updatedResource,
             loading: false
+        };
+    }
+    case LOADING_LAYER_RESOURCE_CONFIG: {
+        return {
+            ...state,
+            loadingLayerDatasetResourceConfig: action.loading
         };
     }
     case RESOURCE_ERROR: {
