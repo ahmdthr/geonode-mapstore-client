@@ -357,6 +357,11 @@ function ResourcesGrid({
                     type: 'filter'
                 },
                 {
+                    id: 'mapviewer',
+                    labelId: 'gnhome.mapviewers',
+                    type: 'filter'
+                },
+                {
                     id: 'geostory',
                     labelId: 'gnhome.geostories',
                     type: 'filter'
@@ -387,6 +392,10 @@ function ResourcesGrid({
         {
             type: 'select',
             facet: 'user'
+        },
+        {
+            type: 'select',
+            facet: "group"
         },
         {
             type: "accordion",
