@@ -10,17 +10,19 @@ import uniq from 'lodash/uniq';
 import {
     LayerDownloadActionButton,
     FullScreenActionButton,
-    FilterLayerActionButton,
     AddWidgetActionButton
 } from '@js/plugins/actionnavbar/buttons';
 import { getPluginsContext } from '@js/utils/PluginsContextUtils';
 import { toModulePlugin as msToModulePlugin } from '@mapstore/framework/utils/ModulePluginsUtils';
 
+import TOCPlugin from '@mapstore/framework/plugins/TOC';
+
 let epicsNamesToExclude = [
     'loadGeostoryEpic',
     'reloadGeoStoryOnLoginLogout',
     'loadStoryOnHistoryPop',
-    'saveGeoStoryResource'
+    'saveGeoStoryResource',
+    'storeDetailsInfoDashboardEpic'
 ];
 
 // we need to exclude epics that have been initialized already at app level
@@ -31,7 +33,7 @@ export const storeEpicsNamesToExclude = (epics) => {
     epicsNamesToExclude = uniq(epicsNamesToExclude);
 };
 
-function cleanEpics(epics, excludedNames = []) {
+export function cleanEpics(epics, excludedNames = epicsNamesToExclude) {
     const containsExcludedEpic = !!excludedNames.find((epicName) => epics[epicName]);
     if (containsExcludedEpic) {
         return omit(epics, excludedNames);
@@ -59,6 +61,7 @@ const toModulePlugin = (...args) => {
 };
 
 export const plugins = {
+    TOCPlugin,
     LayerDownloadPlugin: toModulePlugin(
         'LayerDownload',
         () => import(/* webpackChunkName: 'plugins/layer-download' */ '@mapstore/framework/plugins/LayerDownload'),
@@ -119,22 +122,7 @@ export const plugins = {
     ),
     FilterLayerPlugin: toModulePlugin(
         'FilterLayer',
-        () => import(/* webpackChunkName: 'plugins/filter-layer-plugin' */ '@mapstore/framework/plugins/FilterLayer'),
-        {
-            overrides: {
-                containers: {
-                    ActionNavbar: {
-                        name: 'FilterLayer',
-                        Component: FilterLayerActionButton,
-                        priority: 1
-                    },
-                    TOC: {
-                        name: "FilterLayer",
-                        priority: 2
-                    }
-                }
-            }
-        }
+        () => import(/* webpackChunkName: 'plugins/filter-layer-plugin' */ '@mapstore/framework/plugins/FilterLayer')
     ),
     MeasurePlugin: toModulePlugin(
         'Measure',
@@ -296,10 +284,6 @@ export const plugins = {
         'Locate',
         () => import(/* webpackChunkName: 'plugins/locate-plugin' */ '@mapstore/framework/plugins/Locate')
     ),
-    TOCPlugin: toModulePlugin(
-        'TOC',
-        () => import(/* webpackChunkName: 'plugins/toc-plugin' */ '@mapstore/framework/plugins/TOC')
-    ),
     DrawerMenuPlugin: toModulePlugin(
         'DrawerMenu',
         () => import(/* webpackChunkName: 'plugins/drawer-menu-plugin' */ '@mapstore/framework/plugins/DrawerMenu')
@@ -315,10 +299,6 @@ export const plugins = {
     MediaViewerPlugin: toModulePlugin(
         'MediaViewer',
         () => import(/* webpackChunkName: 'plugins/media-viewer-plugin' */ '@js/plugins/MediaViewer')
-    ),
-    FitBoundsPlugin: toModulePlugin(
-        'FitBounds',
-        () => import(/* webpackChunkName: 'plugins/fit-bounds-plugin' */ '@js/plugins/FitBounds')
     ),
     DashboardEditorPlugin: toModulePlugin(
         'DashboardEditor',

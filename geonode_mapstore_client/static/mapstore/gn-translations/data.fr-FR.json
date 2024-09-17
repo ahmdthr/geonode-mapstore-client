@@ -44,6 +44,7 @@
             "createDashboard": "Créer un tableau de bord",
             "createNew": "Créer un nouveau",
             "addResource": "Ajouter une ressource",
+            "new": "Nouveau",
             "about": "À propos",
             "people": "Personnes",
             "groups": "Groupe",
@@ -145,7 +146,8 @@
             "noPreview": "Un aperçu n'est pas disponible pour cette ressource",
             "na": "N/A",
             "emptyFilterItems": "Aucun élément à afficher",
-            "loadingItems": "Chargement des éléments..."
+            "loadingItems": "Chargement des éléments...",
+            "3dtiles": "3D Tiles"
         },
         "viewer": {
             "document": {
@@ -288,6 +290,11 @@
             "supportedFiles": "Extensions de fichiers prises en charge",
             "unsupportedFiles": "Fichiers non pris en charge pour le téléchargement",
             "upload": "Télécharger",
+            "addFromUrl": "Ajouter depuis l'URL...",
+            "invalidUrl": "Insérer une URL absolue valide",
+            "unsupportedUrlServiceType": "Sélectionner un type de service",
+            "remoteResourceURLPlaceholder": "URL de la ressource...",
+            "invalidRemoteUploadMessageErrorTooltip": "Le processus de téléchargement a échoué. Veuillez vérifier la validité de l'URL et réessayer de la télécharger",
 
             "uploadDataset": "Télécharger un jeu de données",
             "dragAndDropFile": "Glisser et déposer un fichier à télécharger",
@@ -376,7 +383,9 @@
             "mapViewersCatalogEntriesNoResults": "Aucun résultat ne correspond à votre recherche",
             "linkToViewer": "Lien vers le visualiseur",
             "createNewViewer": "Créer une nouvelle visionneuse",
-            "manageViewerConfiguration": "Gérer la configuration de la visionneuse",
+            "addViewerConfiguration": "Ajouter une visionneuse",
+            "editViewerConfiguration": "Modifier la visionneuse",
+            "removeViewerConfiguration": "Supprimer la visionneuse",
             "previewCustomViewer": "Aperçu de la visionneuse personnalisée",
             "editMapConfiguration": "Modifier la configuration de la carte",
             "resource": "Ressource",
@@ -401,7 +410,16 @@
                         "linkResource": "Échec de l'enregistrement de la ressource liée"
                     }
                 }
-            }
+            },
+            "allResources": "All resources",
+            "assets": "Assets",
+            "settings": "Paramètres",
+            "resourceManagement": "Gestion des ressources",
+            "preserveUploadedMetadata": "Conserver le fichier de métadonnées ISO téléchargé au lieu de le générer",
+            "approveResource": "Approuver cette ressource (utilisé par le flux de travail avancé)",
+            "publishResource": "Publier cette ressource (utilisé par le flux de travail avancé)",
+            "featureResource": "Ajouter cette ressource aux ressources en vedette",
+            "advertiseResource": "Rendre cette ressource consultable"
         }
     }
 }

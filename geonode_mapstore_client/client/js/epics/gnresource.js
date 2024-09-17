@@ -10,7 +10,6 @@ import { Observable } from 'rxjs';
 import axios from '@mapstore/framework/libs/ajax';
 import uuid from "uuid";
 import url from "url";
-import omit from 'lodash/omit';
 import get from 'lodash/get';
 import {
     getNewMapConfiguration,
@@ -19,6 +18,7 @@ import {
 } from '@js/api/geonode/config';
 import {
     getDatasetByPk,
+    getResourceByPk,
     getGeoAppByPk,
     getDocumentByPk,
     getMapByPk,
@@ -73,8 +73,7 @@ import {
 import {
     setControlProperty,
     resetControls,
-    SET_CONTROL_PROPERTY,
-    setControlProperties
+    SET_CONTROL_PROPERTY
 } from '@mapstore/framework/actions/controls';
 import {
     resourceToLayerConfig,
@@ -82,7 +81,7 @@ import {
     toMapStoreMapConfig,
     parseStyleName,
     getCataloguePath,
-    getResourceWithLinkedResources
+    isDefaultDatasetSubtype
 } from '@js/utils/ResourceUtils';
 import {
     canAddResource,
@@ -93,7 +92,7 @@ import { updateAdditionalLayer } from '@mapstore/framework/actions/additionallay
 import { STYLE_OWNER_NAME } from '@mapstore/framework/utils/StyleEditorUtils';
 import { styleServiceSelector } from '@mapstore/framework/selectors/styleeditor';
 import { updateStyleService } from '@mapstore/framework/api/StyleEditor';
-import { CLICK_ON_MAP, resizeMap } from '@mapstore/framework/actions/map';
+import { CLICK_ON_MAP, resizeMap, CHANGE_MAP_VIEW, zoomToExtent } from '@mapstore/framework/actions/map';
 import { purgeMapInfoResults, closeIdentify, NEW_MAPINFO_REQUEST } from '@mapstore/framework/actions/mapInfo';
 import { saveError } from '@js/actions/gnsave';
 import {
@@ -114,17 +113,24 @@ import { wrapStartStop } from '@mapstore/framework/observables/epics';
 import { parseDevHostname } from '@js/utils/APIUtils';
 import { ProcessTypes } from '@js/utils/ResourceServiceUtils';
 import { catalogClose } from '@mapstore/framework/actions/catalog';
+import { VisualizationModes } from '@mapstore/framework/utils/MapTypeUtils';
+import { forceUpdateMapLayout } from '@mapstore/framework/actions/maplayout';
+
+const FIT_BOUNDS_CONTROL = 'fitBounds';
 
 const resourceTypes = {
     [ResourceTypes.DATASET]: {
         resourceObservable: (pk, options) => {
             const { page, selectedLayer, map: currentMap } = options || {};
+            const { subtype } = options?.params || {};
             return Observable.defer(() =>
                 axios.all([
                     getNewMapConfiguration(),
                     options?.isSamePreviousResource
                         ? new Promise(resolve => resolve(options.resourceData))
-                        : getDatasetByPk(pk)
+                        : isDefaultDatasetSubtype(subtype)
+                            ? getDatasetByPk(pk)
+                            : getResourceByPk(pk)
                 ])
                     .then((response) => {
                         const [mapConfig, gnLayer] = response;
@@ -162,6 +168,7 @@ const resourceTypes = {
                             map: {
                                 ...mapConfig.map,
                                 ...currentMap, // keep configuration for other pages when resource id is the same (eg: center, zoom)
+                                visualizationMode: ['3dtiles'].includes(subtype) ? VisualizationModes._3D : VisualizationModes._2D,
                                 layers: [
                                     ...mapConfig.map.layers,
                                     {
@@ -174,10 +181,11 @@ const resourceTypes = {
                             }
                         }),
                         ...((extent && !currentMap)
-                            ? [ setControlProperty('fitBounds', 'geometry', extent) ]
+                            ? [ setControlProperty(FIT_BOUNDS_CONTROL, 'geometry', extent) ]
                             : []),
                         setControlProperty('toolbar', 'expanded', false),
                         setControlProperty('rightOverlay', 'enabled', 'DetailViewer'),
+                        forceUpdateMapLayout(),
                         selectNode(newLayer.id, 'layer', false),
                         setResource(gnLayer),
                         setResourceId(pk),
@@ -206,9 +214,8 @@ const resourceTypes = {
             Observable.defer(() =>  axios.all([
                 getNewMapConfiguration(),
                 getMapByPk(pk)
-                    .then((_resource) => {
-                        const resource = getResourceWithLinkedResources(_resource);
-                        const mapViewers = get(resource, 'linkedResources.linkedTo', [])
+                    .then((resource) => {
+                        const mapViewers = get(resource, 'linked_resources.linked_to', [])
                             .find(({ resource_type: type } = {}) => type === ResourceTypes.VIEWER);
                         return mapViewers?.pk
                             ? axios.all([{...resource}, getGeoAppByPk(mapViewers?.pk, {api_preset: 'catalog_list', include: ['data', 'linked_resources']})])
@@ -227,7 +234,7 @@ const resourceTypes = {
                         setContext(mapViewerResource ? mapViewerResource.data : null),
                         setResource(mapResource),
                         setResourceId(pk),
-                        setMapViewerLinkedResource({...getResourceWithLinkedResources(omit(mapViewerResource, ['data']))}),
+                        setMapViewerLinkedResource(mapViewerResource),
                         setResourcePathParameters({
                             ...options?.params,
                             appPk: mapViewerResource?.pk,
@@ -235,11 +242,16 @@ const resourceTypes = {
                         })
                     );
                 }),
-        newResourceObservable: (options) =>
-            Observable.defer(() => axios.all([
+        newResourceObservable: (options) => {
+            const queryDatasetParts = (options?.query?.['gn-dataset'] || '').split(':');
+            const queryDatasetPk = queryDatasetParts[0];
+            const quryDatasetSubtype = queryDatasetParts[1];
+            return Observable.defer(() => axios.all([
                 getNewMapConfiguration(),
-                ...(options?.query?.['gn-dataset']
-                    ? [ getDatasetByPk(options.query['gn-dataset']) ]
+                ...(queryDatasetPk !== ''
+                    ? [isDefaultDatasetSubtype(quryDatasetSubtype)
+                        ? getDatasetByPk(queryDatasetPk)
+                        : getResourceByPk(queryDatasetPk)]
                     : [])
             ]))
                 .switchMap(([ response, gnLayer ]) => {
@@ -253,6 +265,11 @@ const resourceTypes = {
                                 ...mapConfig,
                                 map: {
                                     ...mapConfig?.map,
+                                    ...(queryDatasetPk !== undefined && {
+                                        visualizationMode: ['3dtiles'].includes(quryDatasetSubtype)
+                                            ? VisualizationModes._3D
+                                            : VisualizationModes._2D
+                                    }),
                                     layers: [
                                         ...(mapConfig?.map?.layers || []),
                                         newLayer
@@ -261,12 +278,12 @@ const resourceTypes = {
                             }
                             : mapConfig),
                         ...(extent
-                            // Add duration to allow map config to be properly updated with zoom on fitBounds action
-                            ? [ setControlProperties('fitBounds', 'geometry', extent, "duration", 400) ]
+                            ? [ setControlProperty(FIT_BOUNDS_CONTROL, 'geometry', extent) ]
                             : []),
                         setControlProperty('toolbar', 'expanded', false)
                     );
-                })
+                });
+        }
     },
     [ResourceTypes.GEOSTORY]: {
         resourceObservable: (pk, options) =>
@@ -413,7 +430,7 @@ const getResetActions = (isSameResource) => [
     resetControls(),
     ...(!isSameResource ? [ resetResourceState() ] : []),
     setControlProperty('rightOverlay', 'enabled', false),
-    setControlProperty('fitBounds', 'geometry', null)
+    setControlProperty(FIT_BOUNDS_CONTROL, 'geometry', null)
 ];
 
 export const gnViewerRequestNewResourceConfig = (action$, store) =>
@@ -648,6 +665,38 @@ export const gnManageLinkedResource = (action$, store) =>
                     ))
             );
         });
+
+const MAX_EXTENT_WEB_MERCATOR = [-180, -85, 180, 85];
+
+function validateGeometry(extent, projection) {
+    if (extent && ['EPSG:900913', 'EPSG:3857'].includes(projection)) {
+        const [minx, miny, maxx, maxy] = extent;
+        const [eMinx, eMiny, eMaxx, eMaxy] = MAX_EXTENT_WEB_MERCATOR;
+        return [
+            minx < eMinx ? eMinx : minx,
+            (miny < eMiny || miny > eMaxy) ? eMiny : miny,
+            maxx > eMaxx ? eMaxx : maxx,
+            (maxy > eMaxy || maxy < eMiny) ? eMaxy : maxy
+        ];
+    }
+    return extent;
+}
+
+export const gnZoomToFitBounds = (action$) =>
+    action$.ofType(SET_CONTROL_PROPERTY)
+        .filter(action => action.control === FIT_BOUNDS_CONTROL && !!action.value)
+        .switchMap((action) =>
+            action$.ofType(CHANGE_MAP_VIEW)
+                .take(1)
+                .switchMap(() => {
+                    const extent = validateGeometry(action.value);
+                    return Observable.of(
+                        zoomToExtent(extent, 'EPSG:4326', undefined, { duration: 0 }),
+                        setControlProperty(FIT_BOUNDS_CONTROL, 'geometry', null)
+                    );
+                })
+        );
+
 export default {
     gnViewerRequestNewResourceConfig,
     gnViewerRequestResourceConfig,
@@ -655,5 +704,6 @@ export default {
     closeInfoPanelOnMapClick,
     closeOpenPanels,
     closeDatasetCatalogPanel,
-    gnManageLinkedResource
+    gnManageLinkedResource,
+    gnZoomToFitBounds
 };

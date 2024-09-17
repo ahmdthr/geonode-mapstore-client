@@ -42,6 +42,7 @@
             "createDashboard": "Create dashboard",
             "createNew": "Create new",
             "addResource": "Add Resource",
+            "new": "New",
             "maps": "Maps",
             "mapviewers": "MapViewers",
             "about": "About",
@@ -145,7 +146,8 @@
             "noPreview": "A preview is not available for this resource",
             "na": "N/A",
             "emptyFilterItems": "No items to display",
-            "loadingItems": "Loading items..."
+            "loadingItems": "Loading items...",
+            "3dtiles": "3D Tiles"
         },
         "viewer": {
             "document": {
@@ -288,6 +290,11 @@
             "supportedFiles": "Supported file extensions",
             "unsupportedFiles": "Files not supported for the upload",
             "upload": "Upload",
+            "addFromUrl": "Add from URL...",
+            "invalidUrl": "Insert a valid absolute URL",
+            "unsupportedUrlServiceType": "Select a service type",
+            "remoteResourceURLPlaceholder": "Resource URL...",
+            "invalidRemoteUploadMessageErrorTooltip": "The upload process failed. Please check the validity of the URL and try to upload it again",
 
             "uploadDataset": "Upload a dataset",
             "dragAndDropFile": "Drag and drop a file to upload",
@@ -403,7 +410,16 @@
                         "linkResource": "Failed to save linked resource"
                     }
                 }
-            }
+            },
+            "allResources": "All resources",
+            "assets": "Assets",
+            "settings": "Settings",
+            "resourceManagement": "Resource management",
+            "preserveUploadedMetadata": "Keep the uploaded ISO metadata file instead of generating it",
+            "approveResource": "Approve this resource (used by the Advanced Workflow)",
+            "publishResource": "Publish this resource (used by the Advanced Workflow)",
+            "featureResource": "Add this resource to featured resources",
+            "advertiseResource": "Make this resource searchable"
         }
     }
 }

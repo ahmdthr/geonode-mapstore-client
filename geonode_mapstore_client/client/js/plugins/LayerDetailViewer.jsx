@@ -46,15 +46,15 @@ import { mapSelector } from '@mapstore/framework/selectors/map';
 import { resourceHasPermission } from '@js/utils/ResourceUtils';
 import { parsePluginConfigExpressions } from '@js/utils/MenuUtils';
 import tooltip from '@mapstore/framework/components/misc/enhancers/tooltip';
-import layerDetailViewerEpics from '@js/epics/layerdetailViewer';
 import Spinner from '@js/components/Spinner/Spinner';
+import { getResourceTypesInfo } from '@js/utils/ResourceUtils';
 
 const Button = tooltip(GNButton);
 
 const ConnectedDetailsPanel = connect(
     createSelector([
         state => state?.gnresource?.layerDataset || null,
-        state => state?.gnresource?.loadingLayerDatasetResourceConfig || false,
+        state => state?.gnresource?.loading || false,
         state => state?.gnresource?.layerDataset?.favorite || false,
         state => state?.gnsave?.savingThumbnailMap || false,
         isThumbnailChanged,
@@ -85,25 +85,21 @@ const ConnectedDetailsPanel = connect(
     }
 )(DetailsPanel);
 
-const ButtonViewer = ({ onClick, layer, size, status, showMessage, loading }) => {
+const ButtonViewer = ({ onClick, layer, size, status, showMessage, resourceType }) => {
     const layerResourceId = layer?.extendedParams?.pk;
     const handleClickButton = () => {
         onClick();
     };
-
+    const { icon = 'info-circle' } = getResourceTypesInfo()[resourceType] || {};
     return layerResourceId && status === 'LAYER' ? (
         <Button
             variant="primary"
             className="square-button-md"
             size={size}
             onClick={handleClickButton}
-            disabled={loading}
             tooltipId={<Message msgId={`gnviewer.info`} />}
         >
-            {loading
-                ? <Spinner />
-                : !showMessage ? <FaIcon name="info-circle" /> : <Message msgId="gnviewer.editInfo"/>
-            }
+            {!showMessage ? <FaIcon name={icon} /> : <Message msgId="gnviewer.editInfo"/>}
         </Button>
     ) : null;
 };
@@ -111,10 +107,8 @@ const ButtonViewer = ({ onClick, layer, size, status, showMessage, loading }) =>
 const ConnectedButton = connect(
     createSelector([
         getUpdatedLayer,
-        (state) => state?.gnresource?.loadingLayerDatasetResourceConfig || false
-    ], (layer, loading) => ({
-        layer,
-        loading
+    ], (layer) => ({
+        layer
     })),
     {
         onClick: setControlProperty.bind(
@@ -215,7 +209,6 @@ export default createPlugin('LayerDetailViewer', {
             Component: ConnectedButton
         }
     },
-    epics: layerDetailViewerEpics,
     reducers: {
         gnresource,
         gnsearch,

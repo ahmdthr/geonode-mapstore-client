@@ -81,8 +81,8 @@ function ViewerRoute({
         pluginsConfig
     });
 
-    const viewer = useRef({ resourceLoaded: false, prevPluginsLength: null });
-    const { resourceLoaded, prevPluginsLength } = viewer.current ?? {};
+    const viewer = useRef({ requestedPk: undefined, prevPluginsLength: null });
+    const { requestedPk, prevPluginsLength } = viewer.current ?? {};
     useEffect(() => {
         if (!prevPluginsLength || pluginsCfgLength === 0) {
             // to ensure and prevent loading and requesting of resource configurations
@@ -93,8 +93,8 @@ function ViewerRoute({
 
     const pluginLoading = prevPluginsLength !== null && prevPluginsLength !== pluginsCfgLength ? false : pending;
     useEffect(() => {
-        if (!pluginLoading && !resourceLoaded && pk !== undefined) {
-            viewer.current.resourceLoaded = true;
+        if (!pluginLoading && pk !== requestedPk) {
+            viewer.current.requestedPk = pk;
             if (pk === 'new') {
                 onCreate(resourceType, {
                     params: match.params
@@ -112,32 +112,6 @@ function ViewerRoute({
     const parsedPlugins = useMemo(() => ({ ...loadedPlugins, ...getPlugins(plugins) }), [loadedPlugins]);
     const Loader = loaderComponent;
     const className = `page-${resourceType}-viewer`;
-
-    useEffect(() => {
-        // set the correct height of navbar
-        const mainHeader = document.querySelector('.gn-main-header');
-        const mainHeaderPlaceholder = document.querySelector('.gn-main-header-placeholder');
-        const topbar = document.querySelector('#gn-topbar');
-        function resize() {
-            if (mainHeaderPlaceholder && mainHeader) {
-                mainHeaderPlaceholder.style.height = mainHeader.clientHeight + 'px';
-            }
-            if (topbar && mainHeader) {
-                topbar.style.top = mainHeader.clientHeight + 'px';
-            }
-        }
-        // hide the navigation bar if a resource is being viewed
-        if (!loading) {
-            document.getElementById('gn-topbar')?.classList.add('hide-navigation');
-            document.getElementById('gn-brand-navbar-bottom')?.classList.add('hide-search-bar');
-            resize();
-        }
-        return () => {
-            document.getElementById('gn-topbar')?.classList.remove('hide-navigation');
-            document.getElementById('gn-brand-navbar-bottom')?.classList.remove('hide-search-bar');
-            resize();
-        };
-    }, [loading]);
 
     return (
         <>

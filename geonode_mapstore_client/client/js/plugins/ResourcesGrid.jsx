@@ -53,7 +53,7 @@ import FaIcon from '@js/components/FaIcon';
 import Button from '@js/components/Button';
 import useLocalStorage from '@js/hooks/useLocalStorage';
 import MainLoader from '@js/components/MainLoader';
-import detailViewerEpics from '@js/epics/detailviewer';
+import tabComponents from '@js/plugins/detailviewer/tabComponents';
 
 const ConnectedDetailsPanel = connect(
     createSelector([
@@ -66,7 +66,8 @@ const ConnectedDetailsPanel = connect(
         favorite: favorite,
         downloading,
         canDownload: resourceHasPermission(resource, 'download_resourcebase'),
-        resourceId: resource?.pk
+        resourceId: resource?.pk,
+        tabComponents
     })),
     {
         onFavorite: setFavoriteResource,
@@ -117,6 +118,40 @@ function PaginationCustom({
         />
     );
 }
+
+const removeMenuHighlight = () => {
+    // Remove previous higlighted menu
+    const menuHiglighted = document.querySelector('#gn-topbar .highlight-menu');
+    menuHiglighted?.classList.remove('highlight-menu');
+};
+const getCatalogPage = (pathname) => {
+    const {params: {page} = {}} = matchPath(pathname, { path: "/:page", exact: true }) ?? {};
+    return page;
+};
+const withPageConfig = (Component) => {
+    return (props) => {
+        useEffect(() => {
+            // highlight topbar menu item based on catalog page
+            const page = getCatalogPage(props.location.pathname);
+
+            if (page) {
+                removeMenuHighlight();
+
+                const topbarMenu = document.querySelector(`#gn-topbar #${page}`);
+                topbarMenu?.classList.add('highlight-menu');
+            } else {
+                removeMenuHighlight();
+            }
+        }, [props.location.pathname]);
+
+        const mergePropsWithPageConfigs = () => {
+            const pageName = getCatalogPage(props.location.pathname, props);
+            return {...props, ...props?.[`${pageName}Page`]};
+        };
+
+        return <Component {...mergePropsWithPageConfigs()} />;
+    };
+};
 
 /**
 * @module ResourcesGrid
@@ -227,7 +262,7 @@ function ResourcesGrid({
     menuItems = [
         {
             labelId: 'gnhome.addResource',
-            disableIf: "{(state('settings') && state('settings').isMobile) || !(state('user') && state('user').perms && state('user').perms.includes('add_resource')) ? true : false}",
+            disableIf: "{(state('settings') && state('settings').isMobile) || !(state('user') && state('user').perms && state('user').perms.includes('add_resource'))}",
             type: 'dropdown',
             variant: 'primary',
             responsive: true,
@@ -320,6 +355,11 @@ function ResourcesGrid({
                     disableIf: '{!state("user")}'
                 },
                 {
+                    id: 'remote',
+                    labelId: 'gnhome.remote',
+                    type: 'filter'
+                },
+                {
                     id: 'dataset',
                     labelId: 'gnhome.datasets',
                     type: 'filter',
@@ -335,13 +375,13 @@ function ResourcesGrid({
                             type: 'filter'
                         },
                         {
-                            id: 'store-remote',
-                            labelId: 'gnhome.remote',
+                            id: 'store-time-series',
+                            labelId: 'gnhome.timeSeries',
                             type: 'filter'
                         },
                         {
-                            id: 'store-time-series',
-                            labelId: 'gnhome.timeSeries',
+                            id: '3dtiles',
+                            labelId: 'gnhome.3dtiles',
                             type: 'filter'
                         }
                     ]
@@ -432,7 +472,7 @@ function ResourcesGrid({
     pagination,
     disableDetailPanel,
     disableFilters,
-    filterPagePath = getCataloguePath('/catalogue/#/search/filter'),
+    filterPagePath = '/catalogue/#/search/filter',
     resourceCardActionsOrder = [
         ProcessTypes.DELETE_RESOURCE,
         ProcessTypes.COPY_RESOURCE,
@@ -445,7 +485,8 @@ function ResourcesGrid({
     onGetFacets,
     facets,
     filters,
-    setFilters
+    setFilters,
+    ...props
 }, context) {
 
     const [_cardLayoutStyleState, setCardLayoutStyle] = useLocalStorage('layoutCardsStyle', defaultCardLayoutStyle);
@@ -501,7 +542,7 @@ function ResourcesGrid({
 
     const handleShowFilterForm = (show) => {
         if (show && disableFilters) {
-            simulateAClick(filterPagePath);
+            simulateAClick(getCataloguePath(filterPagePath));
         } else {
             if (!isEmpty(resource)) {
                 const href = closeDetailPanelHref();
@@ -511,12 +552,38 @@ function ResourcesGrid({
         }
     };
 
+    const isCatalogPage = (pathname) => {
+        const isConfigPresent = !!props?.[`${pathname.replace('/', '')}Page`];
+
+        // to be a catalog page it should have configuration
+        return getCatalogPage(pathname) && isConfigPresent;
+    };
+
+    const getMatchPath = () => {
+        const pathname = location.pathname;
+        const matchedPath = [
+            '/search',
+            '/search/filter',
+            '/detail/:pk',
+            '/detail/:resourceType/:pk',
+            '/:page'
+        ].find((path) => matchPath(pathname, { path, exact: true }));
+        return matchedPath;
+    };
+
+    const getUpdatedPathName = (pathname) => {
+        if (isEmpty(pathname)) {
+            return isCatalogPage(location.pathname) ? location.pathname : '/';
+        }
+        return pathname;
+    };
+
     function handleUpdate(newParams, pathname) {
         const { query } = url.parse(location.search, true);
         onSearch({
             ...omit(query, ['page']),
             ...newParams
-        }, pathname);
+        }, getUpdatedPathName(pathname));
     }
 
     function handleClear() {
@@ -539,7 +606,13 @@ function ResourcesGrid({
     }, [cardLayoutStyle]);
 
     useEffect(() => {
-        if (init) {
+        let pathname = location.pathname;
+        const initialize = (pathname === '/'
+        || !isEmpty(getMatchPath())
+        || isCatalogPage(pathname)) && init;
+
+        if (initialize) {
+            pathname = getUpdatedPathName();
             onInit({
                 defaultQuery,
                 pageSize,
@@ -556,9 +629,9 @@ function ResourcesGrid({
             onSearch({
                 ...query,
                 ...(page && { page })
-            }, undefined, true);
+            }, pathname, true);
         }
-    }, [init, isPaginated]);
+    }, [init, isPaginated, location.pathname]);
 
     const [top, setTop] = useState(0);
     const [bottom, setBottom] = useState(0);
@@ -596,19 +669,13 @@ function ResourcesGrid({
     useEffect(() => {
         if (!panel) {
             const pathname = location.pathname;
-            const matchedPath = [
-                '/search',
-                '/search/filter',
-                '/detail/:pk',
-                '/detail/:resourceType/:pk'
-            ].find((path) => matchPath(pathname, { path, exact: true }));
+            const matchedPath = getMatchPath();
             if (matchedPath) {
                 const options = matchPath(pathname, { path: matchedPath, exact: true });
-                onReplaceLocation('' + (location.search || ''));
+                !isCatalogPage(location.pathname) && onReplaceLocation('' + (location.search || ''));
                 switch (options.path) {
                 case '/search':
                 case '/detail/:pk': {
-                    //
                     break;
                 }
                 case '/search/filter': {
@@ -760,7 +827,7 @@ function ResourcesGrid({
                                 scrollContainer={scrollContainerSelector ? document.querySelector(scrollContainerSelector) : undefined}
                                 getDetailHref={res => handleFormatHref({
                                     query: {
-                                        'd': `${res.pk};${res.resource_type}`
+                                        'd': `${res.pk};${res.resource_type}${res.subtype ? `;${res.subtype}` : ''}`
                                     },
                                     replaceQuery: true,
                                     excludeQueryKeys: []
@@ -824,7 +891,7 @@ const ResourcesGridPlugin = connect(
         onGetFacets: getFacetItems,
         setFilters: setFiltersAction
     }
-)(withResizeDetector(ResourcesGrid));
+)(withResizeDetector(withPageConfig(ResourcesGrid)));
 
 export default createPlugin('ResourcesGrid', {
     component: ResourcesGridPlugin,
@@ -833,8 +900,7 @@ export default createPlugin('ResourcesGrid', {
         ...gnsearchEpics,
         ...gnsaveEpics,
         ...resourceServiceEpics,
-        ...favoriteEpics,
-        ...detailViewerEpics
+        ...favoriteEpics
     },
     reducers: {
         gnsearch,

@@ -57,6 +57,7 @@ describe('Test App Routes Utils', () => {
 
     it('test catalogue routes', () => {
         const [
+            datasetSubtypeRoute,
             datasetRoute,
             datasetEditDataRoute,
             datasetEditStyleRoute,
@@ -70,6 +71,9 @@ describe('Test App Routes Utils', () => {
             uploadDatasetRoute,
             uploadDocumentRoute
         ] = routeUtils.CATALOGUE_ROUTES;
+        expect(datasetSubtypeRoute.path).toEqual(['/dataset/:subtype/:pk']);
+        expect(datasetSubtypeRoute.name).toEqual('dataset_viewer');
+        expect(datasetSubtypeRoute.shouldNotRequestResources).toEqual(true);
         expect(datasetRoute.path).toEqual(['/dataset/:pk']);
         expect(datasetRoute.name).toEqual('dataset_viewer');
         expect(datasetRoute.shouldNotRequestResources).toEqual(true);
@@ -102,7 +106,8 @@ describe('Test App Routes Utils', () => {
             '/search/',
             '/search/filter',
             '/detail/:pk',
-            '/detail/:ctype/:pk'
+            '/detail/:ctype/:pk',
+            '/:page'
         ]);
         expect(catalogueRoute.name).toEqual('catalogue');
         expect(uploadDatasetRoute.path).toEqual(['/upload/dataset']);

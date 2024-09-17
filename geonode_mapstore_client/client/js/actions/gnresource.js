@@ -8,10 +8,8 @@
 
 export const RESOURCE_LOADING = 'GEONODE:RESOURCE_LOADING';
 export const SET_RESOURCE = 'GEONODE:SET_RESOURCE';
-export const SET_LAYER_RESOURCE = 'GEONODE:SET_LAYER_RESOURCE';
 export const RESOURCE_ERROR = 'GEONODE:RESOURCE_ERROR';
 export const UPDATE_RESOURCE_PROPERTIES = 'GEONODE:UPDATE_RESOURCE_PROPERTIES';
-export const UPDATE_LAYER_RESOURCE_PROPERTIES = 'GEONODE:UPDATE_LAYER_RESOURCE_PROPERTIES';
 export const SET_RESOURCE_TYPE = 'GEONODE:SET_RESOURCE_TYPE';
 export const SET_NEW_RESOURCE = 'GEONODE:SET_NEW_RESOURCE';
 export const SET_RESOURCE_ID = 'GEONODE:SET_RESOURCE_ID';
@@ -41,6 +39,8 @@ export const SET_RESOURCE_EXTENT = 'GEONODE_SET_RESOURCE_EXTENT';
 export const SET_RESOURCE_PATH_PARAMETERS = 'GEONODE:SET_RESOURCE_PATH_PARAMETERS';
 export const SET_MAP_VIEWER_LINKED_RESOURCE = 'GEONODE:SET_MAP_VIEWER_LINKED_RESOURCE';
 export const MANAGE_LINKED_RESOURCE = 'GEONODE:MANAGE_LINKED_RESOURCE';
+export const SET_DEFAULT_VIEWER_PLUGINS = 'GEONODE:SET_DEFAULT_VIEWER_PLUGINS';
+export const SET_SELECTED_LAYER = 'GEONODE:SET_SELECTED_LAYER';
 
 /**
 * Actions for GeoNode resource
@@ -65,19 +65,6 @@ export function resourceLoading() {
 export function setResource(data, pending) {
     return {
         type: SET_RESOURCE,
-        data,
-        pending
-    };
-}
-
-/**
-* Restores resource from the state
-* @param {object} data resource data object
-* @param {object} pending declare if the request is still pending
-*/
-export function setLayerResource(data, pending) {
-    return {
-        type: SET_LAYER_RESOURCE,
         data,
         pending
     };
@@ -175,17 +162,6 @@ export function resourceError(error) {
 export function updateResourceProperties(properties) {
     return {
         type: UPDATE_RESOURCE_PROPERTIES,
-        properties
-    };
-}
-
-/**
-* Update resource properties
-* @param {object} properties resource properties to override
-*/
-export function updateLayerResourceProperties(properties) {
-    return {
-        type: UPDATE_LAYER_RESOURCE_PROPERTIES,
         properties
     };
 }
@@ -381,5 +357,26 @@ export function setMapViewerLinkedResource(resource) {
     return {
         type: SET_MAP_VIEWER_LINKED_RESOURCE,
         resource
+    };
+}
+
+/**
+ * Set default viewer plugins
+ */
+export function setDefaultViewerPlugins(plugins) {
+    return {
+        type: SET_DEFAULT_VIEWER_PLUGINS,
+        plugins
+    };
+}
+
+/**
+ * Set selected layer type is from dataset
+ * @param {Object} layer selected
+ */
+export function setSelectedLayer(layer) {
+    return {
+        type: SET_SELECTED_LAYER,
+        layer
     };
 }

@@ -44,6 +44,7 @@
             "createDashboard": "Crear dashboard",
             "createNew": "Crear nuevo",
             "addResource": "Agregar recurso",
+            "new": "Nuevo",
             "about": "Acerca de",
             "people": "Personas",
             "groups": "Grupos",
@@ -145,7 +146,8 @@
             "noPreview": "Una vista previa no está disponible para este recurso",
             "na": "N/A",
             "emptyFilterItems": "No hay elementos para mostrar",
-            "loadingItems": "Cargando artículos..."
+            "loadingItems": "Cargando artículos...",
+            "3dtiles": "3D Tiles"
         },
         "viewer": {
             "document": {
@@ -287,6 +289,11 @@
             "supportedFiles": "Extensiones de archivo admitidas",
             "unsupportedFiles": "Archivos no admitidos para la carga",
             "upload": "Subir",
+            "addFromUrl": "Agregar desde URL...",
+            "invalidUrl": "Insertar una URL absoluta válida",
+            "unsupportedUrlServiceType": "Seleccionar un tipo de servicio",
+            "remoteResourceURLPlaceholder": "URL del recurso...",
+            "invalidRemoteUploadMessageErrorTooltip": "El proceso de carga falló. Verifique la validez de la URL e intente cargarla nuevamente",
 
             "uploadDataset": "Subir un conjunto de datos",
             "dragAndDropFile": "Arrastra y suelta un archivo para cargar",
@@ -375,7 +382,9 @@
             "mapViewersCatalogEntriesNoResults": "Ningún resultado coincide con su búsqueda",
             "linkToViewer": "Enlace al visor",
             "createNewViewer": "Crear nuevo visor",
-            "manageViewerConfiguration": "Administrar la configuración del visor",
+            "addViewerConfiguration": "Agregar espectador",
+            "editViewerConfiguration": "Editar visor",
+            "removeViewerConfiguration": "Eliminar espectador",
             "previewCustomViewer": "Vista previa del visor personalizado",
             "editMapConfiguration": "Editar configuración del mapa",
             "resource": "Recurso",
@@ -400,7 +409,16 @@
                         "linkResource": "No se pudo guardar el recurso vinculado"
                     }
                 }
-            }
+            },
+            "allResources": "All resources",
+            "assets": "Assets",
+            "settings": "Configuracion",
+            "resourceManagement": "Gestión de recursos",
+            "preserveUploadedMetadata": "Conservar el archivo de metadatos ISO cargado en lugar de generarlo",
+            "approveResource": "Aprobar este recurso (utilizado por el flujo de trabajo avanzado)",
+            "publishResource": "Publicar este recurso (utilizado por el flujo de trabajo avanzado)",
+            "featureResource": "Agregar este recurso a los recursos destacados",
+            "advertiseResource": "Hacer que este recurso sea buscable"
         }
     }
 }

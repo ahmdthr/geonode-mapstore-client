@@ -8,14 +8,13 @@
 
 import isEqual from 'lodash/isEqual';
 import isEmpty from 'lodash/isEmpty';
+import omit from 'lodash/omit';
 
 import {
     RESOURCE_LOADING,
     SET_RESOURCE,
-    SET_LAYER_RESOURCE,
     RESOURCE_ERROR,
     UPDATE_RESOURCE_PROPERTIES,
-    UPDATE_LAYER_RESOURCE_PROPERTIES,
     SET_RESOURCE_TYPE,
     SET_NEW_RESOURCE,
     SET_RESOURCE_ID,
@@ -35,11 +34,13 @@ import {
     SET_RESOURCE_EXTENT,
     SET_RESOURCE_PATH_PARAMETERS,
     SET_MAP_VIEWER_LINKED_RESOURCE,
-    LOADING_LAYER_RESOURCE_CONFIG
+    SET_DEFAULT_VIEWER_PLUGINS,
+    SET_SELECTED_LAYER
 } from '@js/actions/gnresource';
 import {
     cleanCompactPermissions,
-    getGeoLimitsFromCompactPermissions
+    getGeoLimitsFromCompactPermissions,
+    getResourceAdditionalProperties
 } from '@js/utils/ResourceUtils';
 
 const defaultState = {
@@ -74,7 +75,8 @@ function gnresource(state = defaultState, action) {
         };
     }
     case SET_RESOURCE: {
-        const { data, ...resource } = action.data || {};
+        const actionData = getResourceAdditionalProperties(action.data || {});
+        const { data, ...resource } = actionData;
         let updatedResource = {...resource};
         const linkedResources = state.data?.linkedResources;
         if (!isEmpty(linkedResources) && updatedResource.pk === state.data?.pk) {
@@ -83,31 +85,10 @@ function gnresource(state = defaultState, action) {
 
         return {...state,
             error: null,
-            initialResource: { ...action.data },
+            initialResource: { ...actionData },
             data: updatedResource,
             loading: false,
             isNew: false
-        };
-    }
-    case SET_LAYER_RESOURCE: {
-        const { data, ...resource } = action.data || {};
-        let updatedResource = {...resource};
-        const linkedResources = state.layerDataset?.linkedResources;
-        if (!isEmpty(linkedResources) && updatedResource.pk === state.layerDataset?.pk) {
-            updatedResource.linkedResources = linkedResources;
-        }
-
-        return {...state,
-            error: null,
-            initialLayerResource: { ...action.data },
-            layerDataset: updatedResource,
-            loading: false
-        };
-    }
-    case LOADING_LAYER_RESOURCE_CONFIG: {
-        return {
-            ...state,
-            loadingLayerDatasetResourceConfig: action.loading
         };
     }
     case RESOURCE_ERROR: {
@@ -124,15 +105,6 @@ function gnresource(state = defaultState, action) {
             ...state,
             data: {
                 ...state.data,
-                ...action.properties
-            }
-        };
-    }
-    case UPDATE_LAYER_RESOURCE_PROPERTIES: {
-        return {
-            ...state,
-            layerDataset: {
-                ...state.layerDataset,
                 ...action.properties
             }
         };
@@ -269,7 +241,17 @@ function gnresource(state = defaultState, action) {
     case SET_MAP_VIEWER_LINKED_RESOURCE:
         return {
             ...state,
-            viewerLinkedResource: action.resource
+            viewerLinkedResource: { ...getResourceAdditionalProperties(omit(action.resource, ['data'])) }
+        };
+    case SET_DEFAULT_VIEWER_PLUGINS:
+        return {
+            ...state,
+            defaultViewerPlugins: action.plugins
+        };
+    case SET_SELECTED_LAYER:
+        return {
+            ...state,
+            selectedLayer: action.layer
         };
     default:
         return state;

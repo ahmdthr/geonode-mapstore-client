@@ -44,6 +44,7 @@
             "createDashboard": "Crea dashboard",
             "createNew": "Crea nuova",
             "addResource": "Aggiungi risorsa",
+            "new": "Nuovo",
             "about": "A proposito",
             "people": "Utenti",
             "groups": "Gruppi",
@@ -147,7 +148,8 @@
             "noPreview": "Un'anteprima non è disponibile per questa risorsa",
             "na": "N/D",
             "emptyFilterItems": "Nessun elemento da visualizzare",
-            "loadingItems": "Caricamento elementi..."
+            "loadingItems": "Caricamento elementi...",
+            "3dtiles": "3D Tiles"
         },
         "viewer": {
             "document": {
@@ -290,6 +292,11 @@
             "supportedFiles": "Estensioni supportate",
             "unsupportedFiles": "File non supportati per il caricamento",
             "upload": "Carica",
+            "addFromUrl": "Aggiungi da URL...",
+            "invalidUrl": "Inserisci un URL assoluto valido",
+            "unsupportedUrlServiceType": "Seleziona un tipo di servizio",
+            "remoteResourceURLPlaceholder": "URL risorsa...",
+            "invalidRemoteUploadMessageErrorTooltip": "Il processo di caricamento non è riuscito. Controlla la validità dell'URL e prova a caricarlo di nuovo",
 
             "uploadDataset": "Carica un dataset",
             "dragAndDropFile": "Trascina e rilascia un file da caricare",
@@ -378,7 +385,9 @@
             "mapViewersCatalogEntriesNoResults": "Nessun risultato corrisponde alla tua ricerca",
             "linkToViewer": "Collega ad un visualizzatore",
             "createNewViewer": "Crea un nuovo visualizzatore",
-            "manageViewerConfiguration": "Gestisci la configurazione del visualizzatore",
+            "addViewerConfiguration": "Aggiungi visualizzatore",
+            "editViewerConfiguration": "Modifica visualizzatore",
+            "removeViewerConfiguration": "Rimuovi visualizzatore",
             "previewCustomViewer": "Anteprima del visualizzatore personalizzato",
             "editMapConfiguration": "Modifica configurazione della mappa",
             "resource": "Risorsa",
@@ -403,7 +412,16 @@
                         "linkResource": "Impossibile salvare la risorsa collegata"
                     }
                 }
-            }
+            },
+            "allResources": "All resources",
+            "assets": "Assets",
+            "settings": "Impostazioni",
+            "resourceManagement": "Gestione della risorsa",
+            "preserveUploadedMetadata": "Conserva il file dei metadati ISO caricato invece di generarlo",
+            "approveResource": "Approva questa risorsa (utilizzata dall' Advanced Workflow)",
+            "publishResource": "Pubblica questa risorsa (utilizzata dall' Advanced Workflow)",
+            "featureResource": "Aggiungi questa risorsa alle risorse in evidenza",
+            "advertiseResource": "Rendi questa risorsa ricercabile"
         }
     }
 }

@@ -75,6 +75,17 @@ export const CATALOGUE_ROUTES = [
     {
         name: 'dataset_viewer',
         path: [
+            '/dataset/:subtype/:pk'
+        ],
+        pageConfig: {
+            resourceType: ResourceTypes.DATASET
+        },
+        component: appRouteComponentTypes.VIEWER,
+        shouldNotRequestResources: true
+    },
+    {
+        name: 'dataset_viewer',
+        path: [
             '/dataset/:pk'
         ],
         pageConfig: {
@@ -178,7 +189,8 @@ export const CATALOGUE_ROUTES = [
             '/search/',
             '/search/filter',
             '/detail/:pk',
-            '/detail/:ctype/:pk'
+            '/detail/:ctype/:pk',
+            '/:page'
         ],
         component: appRouteComponentTypes.CATALOGUE
     },

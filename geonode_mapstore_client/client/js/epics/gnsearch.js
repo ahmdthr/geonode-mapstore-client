@@ -149,7 +149,9 @@ const requestResourcesObservable = ({
 }, store) => {
     const state = store.getState();
     const customFilters = getCustomMenuFilters(state);
-    const requestParams = cleanParams({ ...params, ...state?.gnsearch?.config?.defaultQuery });
+    let { resource, f, ...defaultQuery } = state?.gnsearch?.config?.defaultQuery ?? {};
+    f = castArray(params.f ?? []).concat([...castArray(resource ?? []), ...castArray(f ?? [])]);
+    const requestParams = cleanParams({ ...params, ...defaultQuery, ...(!isEmpty(f) && {f}) });
     return Observable
         .defer(() => getResources({
             ...requestParams,
@@ -281,11 +283,13 @@ export const gnsRequestResourceOnLocationChange = (action$, store) =>
             const { location } = action.payload || {};
             const { query } = url.parse(location?.search || '', true);
             const resource = getResourceData(state) || { pk: '', resource_type: '' };
-            const [pk, resourceType] = (query?.d || '').split(';');
-            if (`${resource?.pk}` === pk && `${resource?.resource_type}` === resourceType) {
+            const [pk, resourceType, subtype] = (query?.d || '').split(';');
+            if (`${resource?.pk}` === pk
+            && `${resource?.resource_type}` === resourceType
+            && `${resource?.subtype ? resource?.subtype : ''}` === subtype) {
                 return Observable.empty();
             }
-            return Observable.of(requestResource(pk ? pk : undefined, resourceType));
+            return Observable.of(requestResource(pk ? pk : undefined, resourceType, subtype));
         });
 
 export const gnsSelectResourceEpic = (action$, store) =>
@@ -298,7 +302,7 @@ export const gnsSelectResourceEpic = (action$, store) =>
             const resources = state.gnsearch?.resources || [];
             const selectedResource = resources.find(({ pk, resource_type: resourceType}) =>
                 pk === action.pk && action.ctype === resourceType);
-            return Observable.defer(() => getResourceByTypeAndByPk(action.ctype, action.pk))
+            return Observable.defer(() => getResourceByTypeAndByPk(action.ctype, action.pk, action.subtype))
                 .switchMap((resource) => {
                     return Observable.of(setResource({
                         ...resource,

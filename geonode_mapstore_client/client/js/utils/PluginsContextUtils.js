@@ -12,10 +12,10 @@ import {
     resourceHasPermission,
     canCopyResource,
     isDocumentExternalSource,
-    getCataloguePath,
-    isDatasetLayer
+    getCataloguePath
 } from '@js/utils/ResourceUtils';
 import get from 'lodash/get';
+import isNil from 'lodash/isNil';
 
 function getUserResourceName(user) {
     return user?.first_name !== '' && user?.last_name !== ''
@@ -37,6 +37,23 @@ function getUserResourceNames(users = []) {
     });
 }
 
+const getCreateNewMapLink = (resource) => {
+    return `#/map/new?gn-dataset=${resource?.pk}:${resource?.subtype || ''}`;
+};
+
+const hasDefaultSettings = (layer) => {
+    if (layer?.type === 'wms' && !isNil(layer?.extendedParams?.pk)) {
+        return false;
+    }
+    return true;
+};
+
+const canManageResourceSettings = (resource) => {
+    const { perms } = resource || {};
+    const settingsPerms = ['feature_resourcebase', 'approve_resourcebase', 'publish_resourcebase'];
+    return !!(perms || []).find(perm => settingsPerms.includes(perm));
+};
+
 export const getPluginsContext = () => ({
     get,
     getMetadataUrl,
@@ -48,5 +65,7 @@ export const getPluginsContext = () => ({
     getUserResourceNames,
     isDocumentExternalSource,
     getCataloguePath,
-    isDatasetLayer
+    getCreateNewMapLink,
+    hasDefaultSettings,
+    canManageResourceSettings
 });
