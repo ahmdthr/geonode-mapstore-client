@@ -27,15 +27,11 @@ import FaIcon from '@js/components/FaIcon/FaIcon';
 import controls from '@mapstore/framework/reducers/controls';
 import { setControlProperty } from '@mapstore/framework/actions/controls';
 import gnresource from '@js/reducers/gnresource';
-import gnsearch from '@js/reducers/gnsearch';
 import {
-    getResourceId,
     isThumbnailChanged,
-    updatingThumbnailResource
+    updatingThumbnailResource,
+    getSelectedLayer
 } from '@js/selectors/resource';
-import {
-    getUpdatedLayer
-} from '@mapstore/framework/selectors/styleeditor';
 import GNButton from '@js/components/Button';
 import useDetectClickOut from '@js/hooks/useDetectClickOut';
 import OverlayContainer from '@js/components/OverlayContainer';
@@ -46,7 +42,6 @@ import { mapSelector } from '@mapstore/framework/selectors/map';
 import { resourceHasPermission } from '@js/utils/ResourceUtils';
 import { parsePluginConfigExpressions } from '@js/utils/MenuUtils';
 import tooltip from '@mapstore/framework/components/misc/enhancers/tooltip';
-import Spinner from '@js/components/Spinner/Spinner';
 import { getResourceTypesInfo } from '@js/utils/ResourceUtils';
 
 const Button = tooltip(GNButton);
@@ -85,28 +80,25 @@ const ConnectedDetailsPanel = connect(
     }
 )(DetailsPanel);
 
-const ButtonViewer = ({ onClick, layer, size, status, showMessage, resourceType }) => {
-    const layerResourceId = layer?.extendedParams?.pk;
+const ButtonViewer = ({ onClick, layer, size, status }) => {
+    const layerResourceId = layer?.pk;
     const handleClickButton = () => {
         onClick();
     };
-    const { icon = 'info-circle' } = getResourceTypesInfo()[resourceType] || {};
     return layerResourceId && status === 'LAYER' ? (
         <Button
             variant="primary"
-            className="square-button-md"
             size={size}
             onClick={handleClickButton}
-            tooltipId={<Message msgId={`gnviewer.info`} />}
         >
-            {!showMessage ? <FaIcon name={icon} /> : <Message msgId="gnviewer.editInfo"/>}
+            <FaIcon name={'info-circle'} />
         </Button>
     ) : null;
 };
 
 const ConnectedButton = connect(
     createSelector([
-        getUpdatedLayer,
+        getSelectedLayer,
     ], (layer) => ({
         layer
     })),
@@ -115,7 +107,7 @@ const ConnectedButton = connect(
             null,
             'rightOverlay',
             'enabled',
-            'LayerDetailViewer'
+            'DetailViewer'
         )
     }
 )((ButtonViewer));
@@ -183,8 +175,7 @@ const LayerDetailViewerPlugin = connect(
         [
             (state) =>
                 state?.controls?.rightOverlay?.enabled === 'LayerDetailViewer',
-            getUpdatedLayer,
-            getResourceId,
+            getSelectedLayer,
             state => getMonitoredState(state, getConfigProp('monitorState'))
         ],
         (enabled, layer, monitoredState) => ({
@@ -211,7 +202,6 @@ export default createPlugin('LayerDetailViewer', {
     },
     reducers: {
         gnresource,
-        gnsearch,
         controls
     }
 });
