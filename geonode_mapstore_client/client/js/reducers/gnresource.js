@@ -249,9 +249,15 @@ function gnresource(state = defaultState, action) {
             defaultViewerPlugins: action.plugins
         };
     case SET_SELECTED_LAYER:
+        let linkedResources = action.layer.linked_resources ?? {};
+        if (!isEmpty(linkedResources)) {
+            const linkedTo = linkedResources.linked_to ?? [];
+            const linkedBy = linkedResources.linked_by ?? [];
+            linkedResources = isEmpty(linkedTo) && isEmpty(linkedBy) ? {} : ({ linkedTo, linkedBy });
+        }
         return {
             ...state,
-            selectedLayer: action.layer
+            selectedLayer: { ...action.layer, linkedResources }
         };
     default:
         return state;
