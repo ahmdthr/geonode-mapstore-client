@@ -17,7 +17,7 @@ import FaIcon from '@js/components/FaIcon/FaIcon';
 import controls from '@mapstore/framework/reducers/controls';
 import { setControlProperty } from '@mapstore/framework/actions/controls';
 import gnresource from '@js/reducers/gnresource';
-import { getSelectedLayer } from '@js/selectors/resource';
+import { getSelectedLayerDataset } from '@js/selectors/resource';
 import GNButton from '@js/components/Button';
 import useDetectClickOut from '@js/hooks/useDetectClickOut';
 import OverlayContainer from '@js/components/OverlayContainer';
@@ -32,7 +32,7 @@ const Button = tooltip(GNButton);
 
 const ConnectedDetailsPanel = connect(
     createSelector([
-        state => state?.gnresource?.selectedLayer || null,
+        state => state?.gnresource?.selectedLayerDataset || null,
         state => state?.gnresource?.loading || false,
         mapSelector,
         state => state?.gnresource?.showMapThumbnail || false,
@@ -68,7 +68,7 @@ const ButtonViewer = ({ onClick, layer, size, status }) => {
 
 const ConnectedButton = connect(
     createSelector([
-        getSelectedLayer,
+        getSelectedLayerDataset,
     ], (layer) => ({
         layer
     })),
@@ -131,7 +131,7 @@ const LayerDetailViewerPlugin = connect(
         [
             (state) =>
                 state?.controls?.rightOverlay?.enabled === 'LayerDetailViewer',
-            getSelectedLayer,
+            getSelectedLayerDataset,
             state => getMonitoredState(state, getConfigProp('monitorState'))
         ],
         (enabled, layer, monitoredState) => ({

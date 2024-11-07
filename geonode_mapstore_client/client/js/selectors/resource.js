@@ -99,6 +99,10 @@ export const getSelectedLayer = (state) => {
     return state?.gnresource?.selectedLayer;
 };
 
+export const getSelectedLayerDataset = (state) => {
+    return state?.gnresource?.selectedLayerDataset;
+};
+
 export const getCompactPermissions = (state) => {
     const compactPermissions = state?.gnresource?.compactPermissions || {};
     return compactPermissions;

@@ -18,8 +18,9 @@ import { getDatasetByName, getDatasetsByName, getDatasetByPk } from '@js/api/geo
 import { MAP_CONFIG_LOADED } from '@mapstore/framework/actions/config';
 import { setPermission } from '@mapstore/framework/actions/featuregrid';
 import { SELECT_NODE, updateNode, ADD_LAYER } from '@mapstore/framework/actions/layers';
-import { setSelectedDatasetPermissions, setSelectedLayer } from '@js/actions/gnresource';
+import { setSelectedDatasetPermissions, setSelectedLayer, updateLayerDataset, setLayerDataset } from '@js/actions/gnresource';
 import { updateMapLayoutEpic as msUpdateMapLayoutEpic } from '@mapstore/framework/epics/maplayout';
+import isEmpty from 'lodash/isEmpty';
 
 // We need to include missing epics. The plugins that normally include this epic is not used.
 
@@ -37,34 +38,49 @@ export const gnCheckSelectedDatasetPermissions = (action$, { getState } = {}) =>
         .switchMap(() => {
             const state = getState() || {};
             const layer = getSelectedLayer(state);
-            const layerResourceId = layer?.extendedParams?.pk;
             const permissions = layer?.perms || [];
             const canEditStyles = permissions.includes("change_dataset_style");
             const canEdit = permissions.includes("change_dataset_data");
             return layer
-                ? layerResourceId
-                    ? Rx.Observable.defer(() =>
-                        getDatasetByPk(layerResourceId, true)
-                            .then((layerDataset) => layerDataset)
-                            .catch(() => [])
-                    ).switchMap((layerDataset) =>
-                        Rx.Observable.of(
-                            setSelectedLayer(layerDataset),
-                            setPermission({canEdit}),
-                            setEditPermissionStyleEditor(canEditStyles),
-                            setSelectedDatasetPermissions(permissions)
-                        )
-                    )
-                    : Rx.Observable.of(
-                        setPermission({canEdit}),
-                        setEditPermissionStyleEditor(canEditStyles),
-                        setSelectedDatasetPermissions(permissions)
-                    )
+                ? Rx.Observable.of(
+                    setPermission({canEdit}),
+                    setEditPermissionStyleEditor(canEditStyles),
+                    setSelectedDatasetPermissions(permissions),
+                    setSelectedLayer(layer)
+                )
                 : Rx.Observable.of(
                     setPermission({canEdit: false}),
                     setEditPermissionStyleEditor(false),
-                    setSelectedDatasetPermissions([])
+                    setSelectedDatasetPermissions([]),
+                    setSelectedLayer(null)
                 );
+        });
+
+/**
+ * Fetches missing values for selected layers
+ */
+export const gnFetchMissingLayerData = (action$, { getState } = {}) =>
+    action$.ofType(SELECT_NODE)
+        .filter(({ nodeType }) => nodeType && nodeType === "layer")
+        .switchMap(() => {
+            const state = getState() || {};
+            const layer = getSelectedLayer(state);
+            const layerResourceId = layer?.extendedParams?.pk;
+            const layerResourceDataset = state.gnresource.data.maplayers.find(layer => layer.dataset.pk === parseInt(layerResourceId, 10)).dataset
+            return isEmpty(layerResourceDataset.linkedResources)
+                ? Rx.Observable.defer(() =>
+                    getDatasetByPk(layerResourceId, true) // Second argument as true to include linked resources
+                        .then((layerDataset) => layerDataset)
+                        .catch(() => [])
+                ).switchMap((layerDataset) =>
+                    Rx.Observable.of(
+                        updateLayerDataset(layerDataset),
+                        setLayerDataset(layerResourceId)
+                    )
+                )
+                : Rx.Observable.of(
+                    setLayerDataset(layerResourceId)
+                )
         });
 
 
