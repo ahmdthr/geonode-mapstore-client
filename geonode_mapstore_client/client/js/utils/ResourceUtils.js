@@ -13,7 +13,7 @@ import omit from 'lodash/omit';
 import { getConfigProp, convertFromLegacy, normalizeConfig } from '@mapstore/framework/utils/ConfigUtils';
 import { getGeoNodeLocalConfig, parseDevHostname } from '@js/utils/APIUtils';
 import { ProcessTypes, ProcessStatus } from '@js/utils/ResourceServiceUtils';
-import { uniqBy, orderBy, isString, isObject, pick, difference } from 'lodash';
+import { uniqBy, orderBy, isString, isObject } from 'lodash';
 import { excludeGoogleBackground, extractTileMatrixFromSources } from '@mapstore/framework/utils/LayersUtils';
 import { determineResourceType } from '@js/utils/FileUtils';
 import { isImageServerUrl } from '@mapstore/framework/utils/ArcGISUtils';
@@ -55,22 +55,27 @@ export const GXP_PTYPES = {
 export const RESOURCE_MANAGEMENT_PROPERTIES = {
     'metadata_uploaded_preserve': {
         labelId: 'gnviewer.preserveUploadedMetadata',
+        tooltipId: 'gnviewer.preserveUploadedMetadataTooltip',
         disabled: (perms = []) => !perms.includes('change_resourcebase')
     },
     'is_approved': {
         labelId: 'gnviewer.approveResource',
+        tooltipId: 'gnviewer.approveResourceTooltip',
         disabled: (perms = []) => !perms.includes('approve_resourcebase')
     },
     'is_published': {
         labelId: 'gnviewer.publishResource',
+        tooltipId: 'gnviewer.publishResourceTooltip',
         disabled: (perms = []) => !perms.includes('publish_resourcebase')
     },
     'featured': {
         labelId: 'gnviewer.featureResource',
+        tooltipId: 'gnviewer.featureResourceTooltip',
         disabled: (perms = []) => !perms.includes('feature_resourcebase')
     },
     'advertised': {
         labelId: 'gnviewer.advertiseResource',
+        tooltipId: 'gnviewer.advertiseResourceTooltip',
         disabled: (perms = []) => !perms.includes('change_resourcebase')
     }
 };
@@ -332,8 +337,7 @@ export const getResourceTypesInfo = () => ({
         name: 'Dataset',
         formatMetadataUrl: (resource) => isDefaultDatasetSubtype(resource?.subtype)
             ? `/datasets/${resource.store ? resource.store + ":" : ''}${resource.alternate}/metadata`
-            : `/resources/${resource.pk}/metadata`,
-        catalogPageUrl: '/datasets'
+            : `/resources/${resource.pk}/metadata`
     },
     [ResourceTypes.MAP]: {
         icon: 'map',
@@ -343,8 +347,7 @@ export const getResourceTypesInfo = () => ({
             config: 'map_preview'
         })),
         formatDetailUrl: (resource) => resource?.detail_url && parseDevHostname(resource.detail_url),
-        formatMetadataUrl: (resource) => (`/maps/${resource.pk}/metadata`),
-        catalogPageUrl: '/maps'
+        formatMetadataUrl: (resource) => (`/maps/${resource.pk}/metadata`)
     },
     [ResourceTypes.DOCUMENT]: {
         icon: 'file',
@@ -354,8 +357,7 @@ export const getResourceTypesInfo = () => ({
         formatEmbedUrl: (resource) => isDocumentExternalSource(resource) ? undefined : resource?.embed_url && parseDevHostname(resource.embed_url),
         formatDetailUrl: (resource) => resource?.detail_url && parseDevHostname(resource.detail_url),
         formatMetadataUrl: (resource) => (`/documents/${resource.pk}/metadata`),
-        metadataPreviewUrl: (resource) => (`/documents/${resource.pk}/metadata_detail?preview`),
-        catalogPageUrl: '/documents'
+        metadataPreviewUrl: (resource) => (`/documents/${resource.pk}/metadata_detail?preview`)
     },
     [ResourceTypes.GEOSTORY]: {
         icon: 'book',
@@ -363,8 +365,7 @@ export const getResourceTypesInfo = () => ({
         canPreviewed: (resource) => resourceHasPermission(resource, 'view_resourcebase'),
         formatEmbedUrl: (resource) => resource?.embed_url && parseDevHostname(resource.embed_url),
         formatDetailUrl: (resource) => resource?.detail_url && parseDevHostname(resource.detail_url),
-        formatMetadataUrl: (resource) => (`/apps/${resource.pk}/metadata`),
-        catalogPageUrl: '/geostories'
+        formatMetadataUrl: (resource) => (`/apps/${resource.pk}/metadata`)
     },
     [ResourceTypes.DASHBOARD]: {
         icon: 'dashboard',
@@ -372,8 +373,7 @@ export const getResourceTypesInfo = () => ({
         canPreviewed: (resource) => resourceHasPermission(resource, 'view_resourcebase'),
         formatEmbedUrl: (resource) => resource?.embed_url && parseDevHostname(resource.embed_url),
         formatDetailUrl: (resource) => resource?.detail_url && parseDevHostname(resource.detail_url),
-        formatMetadataUrl: (resource) => (`/apps/${resource.pk}/metadata`),
-        catalogPageUrl: '/dashboards'
+        formatMetadataUrl: (resource) => (`/apps/${resource.pk}/metadata`)
     },
     [ResourceTypes.VIEWER]: {
         icon: 'cogs',
@@ -381,8 +381,7 @@ export const getResourceTypesInfo = () => ({
         canPreviewed: (resource) => resourceHasPermission(resource, 'view_resourcebase'),
         formatEmbedUrl: () => false,
         formatDetailUrl: (resource) => resource?.detail_url && parseDevHostname(resource.detail_url),
-        formatMetadataUrl: (resource) => (`/apps/${resource.pk}/metadata`),
-        catalogPageUrl: '/all'
+        formatMetadataUrl: (resource) => (`/apps/${resource.pk}/metadata`)
     }
 });
 
@@ -738,45 +737,6 @@ export const cleanUrl = (targetUrl) => {
     });
 };
 
-export const parseUploadFiles = (data) => {
-    const { uploadFiles = {}, supportedDatasetTypes = [], supportedOptionalExtensions = [], supportedRequiresExtensions = [] } = data;
-    const mainFileTypes = supportedDatasetTypes.filter(file => !file.needsFiles);
-    const mainFileTypeKeys = mainFileTypes.map(({ id }) => id);
-
-    return Object.keys(uploadFiles)
-        .reduce((acc, baseName) => {
-            const uploadFile = uploadFiles[baseName] || {};
-            const { requires = [], ext = [], optional = [], needsFiles = [] } = supportedDatasetTypes.find(({ id }) => id === uploadFile.type) || {};
-            const cleanedFiles = pick(uploadFile.files, [...requires, ...ext, ...optional, ...needsFiles]);
-            const filesKeys = Object.keys(cleanedFiles);
-            const files = requires.length > 0
-                ? cleanedFiles
-                : filesKeys.length > 1
-                    ? pick(cleanedFiles, supportedOptionalExtensions.includes(ext[0]) ? [...needsFiles, ext[0]] : ext[0])
-                    : cleanedFiles;
-            const newFileKeys = Object.keys(files);
-            const requiredFilesIncluded = newFileKeys.filter((id) => supportedRequiresExtensions.includes(id)) || [];
-            const missingExt = requires.length > 0
-                ? requires.filter((fileExt) => !filesKeys.includes(fileExt))
-                : requiredFilesIncluded.length > 0 ? difference(supportedRequiresExtensions, requiredFilesIncluded) : [];
-
-            const mainExt = filesKeys.find(key => ext.includes(key));
-            const addMissingFiles = supportedOptionalExtensions.includes(mainExt) && missingExt?.length === 0 && !(mainFileTypeKeys.some((type) => newFileKeys.includes(type)));
-
-            return {
-                ...acc,
-                [baseName]: {
-                    ...uploadFile,
-                    mainExt,
-                    files,
-                    missingExt,
-                    addMissingFiles
-                }
-            };
-        }, {});
-};
-
-
 export const getResourceImageSource = (image) => {
     return image ? image : 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAPAAAADICAIAAABZHvsFAAAACXBIWXMAAC4jAAAuIwF4pT92AAABiklEQVR42u3SAQ0AAAjDMMC/5+MAAaSVsKyTFHwxEmBoMDQYGgyNocHQYGgwNBgaQ4OhwdBgaDA0hgZDg6HB0GBoDA2GBkODocHQGBoMDYYGQ4OhMTQYGgwNhgZDY2gwNBgaDI2hwdBgaDA0GBpDg6HB0GBoMDSGBkODocHQYGgMDYYGQ4OhwdAYGgwNhgZDg6ExNBgaDA2GBkNjaDA0GBoMDYbG0GBoMDQYGkODocHQYGgwNIYGQ4OhwdBgaAwNhgZDg6HB0BgaDA2GBkODoTE0GBoMDYYGQ2NoMDQYGgwNhsbQYGgwNBgaQ4OhwdBgaDA0hgZDg6HB0GBoDA2GBkODocHQGBoMDYYGQ4OhMTQYGgwNhgZDY2gwNBgaDA2GxtBgaDA0GBoMjaHB0GBoMDSGBkODocHQYGgMDYYGQ4OhwdAYGgwNhgZDg6ExNBgaDA2GBkNjaDA0GBoMDYbG0GBoMDQYGgyNocHQYGgwNIYGQ4OhwdBgaAwNhgZDg6HB0BgaDA2GBkPDbQH4OQSN0W8qegAAAABJRU5ErkJggg==';
 };
@@ -826,14 +786,6 @@ export const getResourceAdditionalProperties = (_resource = {}) => {
     };
 };
 
-export const onDeleteRedirectTo = (resources = []) => {
-    let redirectUrl = '/';
-    if (!isEmpty(resources) && resources?.length === 1) {
-        const types = getResourceTypesInfo();
-        const { catalogPageUrl } = types[resources[0].resource_type] ?? {};
-        if (catalogPageUrl) {
-            redirectUrl = catalogPageUrl;
-        }
-    }
-    return redirectUrl;
+export const onDeleteRedirectTo = () => {
+    return '/';
 };

@@ -609,16 +609,19 @@
                                     "labelId": "gnviewer.editMetadata"
                                 },
                                 {
-                                    "type": "link",
-                                    "href": "{'/datasets/' + (state('gnResourceData') || {}).alternate + '/style_upload'}",
-                                    "labelId": "gnviewer.styleUpload",
+                                    "type": "plugin",
+                                    "name": "OperationUploadStyle",
                                     "disableIf": "{!context.resourceHasPermission(state('gnResourceData'), 'change_dataset_style')}"
                                 },
                                 {
-                                    "type": "link",
-                                    "href": "{'/datasets/' + (state('gnResourceData') || {}).alternate + '/metadata_upload'}",
-                                    "labelId": "gnviewer.metadataUpload",
+                                    "type": "plugin",
+                                    "name": "OperationUploadMetadata",
                                     "disableIf": "{state('gnResourceData').subtype === '3dtiles'}"
+                                },
+                                {
+                                    "type": "plugin",
+                                    "name": "OperationReplaceDataset",
+                                    "disableIf": "{state('gnResourceData').sourcetype === '3dtiles'}"
                                 }
                             ]
                         },
@@ -839,7 +842,9 @@
                             "id": "settings",
                             "labelId": "gnviewer.settings",
                             "disableIf": "{!context.canManageResourceSettings(state('gnResourceData'))}",
-                            "items": [true]
+                            "items": [
+                                true
+                            ]
                         }
                     ]
                 }
@@ -1143,10 +1148,6 @@
                             "name": "queryform.spatialfilter.operations.intersects"
                         },
                         {
-                            "id": "BBOX",
-                            "name": "queryform.spatialfilter.operations.bbox"
-                        },
-                        {
                             "id": "CONTAINS",
                             "name": "queryform.spatialfilter.operations.contains"
                         },
@@ -1216,6 +1217,127 @@
             },
             {
                 "name": "SidebarMenu"
+            },
+            {
+                "name": "Operation",
+                "cfg": {
+                    "id": "upload-style",
+                    "labelId": "gnviewer.styleUpload",
+                    "containerPosition": "header",
+                    "blocking": true,
+                    "iconName": "paint-brush",
+                    "titleMsgId": "gnviewer.uploadDatasetStyle",
+                    "action": "resource_style_upload",
+                    "api": {
+                        "upload": {
+                            "url": "{context.getEndpointUrl('uploads', '/upload')}",
+                            "maxParallelUploads": 1,
+                            "body": {
+                                "file": {
+                                    "resource_pk": "{context.get(state('gnResourceData'), 'pk')}",
+                                    "base_file": "{context.getUploadMainFile}",
+                                    "action": "resource_style_upload"
+                                }
+                            },
+                            "supportedFiles": "{context.getSupportedFilesByResourceType('dataset', { actions: ['resource_style_upload'] })}"
+                        },
+                        "executionRequest": {
+                            "url": "{context.getEndpointUrl('executionrequest')}",
+                            "params": {
+                                "filter{action}": "resource_style_upload",
+                                "sort[]": "-created",
+                                "filter{geonode_resource}": "{context.get(state('gnResourceData'), 'pk')}"
+                            }
+                        }
+                    }
+                },
+                "override": {
+                    "ActionNavbar": {
+                        "name": "OperationUploadStyle"
+                    }
+                }
+            },
+            {
+                "name": "Operation",
+                "cfg": {
+                    "id": "upload-metadata",
+                    "labelId": "gnviewer.metadataUpload",
+                    "containerPosition": "header",
+                    "iconName": "file-code-o",
+                    "titleMsgId": "gnviewer.uploadDatasetMetadata",
+                    "blocking": true,
+                    "action": "resource_metadata_upload",
+                    "pageReload": true,
+                    "api": {
+                        "upload": {
+                            "url": "{context.getEndpointUrl('uploads', '/upload')}",
+                            "maxParallelUploads": 1,
+                            "body": {
+                                "file": {
+                                    "resource_pk": "{context.get(state('gnResourceData'), 'pk')}",
+                                    "base_file": "{context.getUploadMainFile}",
+                                    "action": "resource_metadata_upload"
+                                }
+                            },
+                            "supportedFiles": "{context.getSupportedFilesByResourceType('dataset', { actions: ['resource_metadata_upload'] })}"
+                        },
+                        "executionRequest": {
+                            "url": "{context.getEndpointUrl('executionrequest')}",
+                            "params": {
+                                "filter{action}": "resource_metadata_upload",
+                                "sort[]": "-created",
+                                "filter{geonode_resource}": "{context.get(state('gnResourceData'), 'pk')}"
+                            }
+                        }
+                    }
+                },
+                "override": {
+                    "ActionNavbar": {
+                        "name": "OperationUploadMetadata"
+                    }
+                }
+            },
+            {
+                "name": "Operation",
+                "cfg": {
+                    "id": "replace-dataset",
+                    "labelId": "gnviewer.replaceDataset",
+                    "containerPosition": "header",
+                    "iconName": "refresh",
+                    "titleMsgId": "gnviewer.replaceDatasetTitle",
+                    "blocking": true,
+                    "action": "replace",
+                    "pageReload": true,
+                    "api": {
+                        "upload": {
+                            "url": "{context.getEndpointUrl('uploads', '/upload')}",
+                            "maxParallelUploads": 1,
+                            "body": {
+                                "file": {
+                                    "resource_pk": "{context.get(state('gnResourceData'), 'pk')}",
+                                    "base_file": "{context.getUploadMainFile}",
+                                    "store_spatial_files": true,
+                                    "overwrite_existing_layer": true,
+                                    "action": "replace"
+                                }
+                            },
+                            "supportedFiles": "{context.getSupportedFilesByResourceType('dataset', { actions: ['replace'] })}"
+                        },
+                        "executionRequest": {
+                            "url": "{context.getEndpointUrl('executionrequest')}",
+                            "params": {
+                                "filter{action}": "replace",
+                                "sort[]": "-created",
+                                "filter{geonode_resource}": "{context.get(state('gnResourceData'), 'pk')}"
+                            }
+                        }
+                    }
+                },
+                "override": {
+                    "ActionNavbar": {
+                        "name": "OperationReplaceDataset"
+                    }
+                }
             }
         ],
         "dataset_edit_data_viewer": [
@@ -1267,10 +1389,6 @@
                         {
                             "id": "INTERSECTS",
                             "name": "queryform.spatialfilter.operations.intersects"
-                        },
-                        {
-                            "id": "BBOX",
-                            "name": "queryform.spatialfilter.operations.bbox"
                         },
                         {
                             "id": "CONTAINS",
@@ -1746,7 +1864,9 @@
                             "id": "settings",
                             "labelId": "gnviewer.settings",
                             "disableIf": "{!context.canManageResourceSettings(state('gnResourceData'))}",
-                            "items": [true]
+                            "items": [
+                                true
+                            ]
                         }
                     ]
                 }
@@ -2041,10 +2161,6 @@
                         {
                             "id": "INTERSECTS",
                             "name": "queryform.spatialfilter.operations.intersects"
-                        },
-                        {
-                            "id": "BBOX",
-                            "name": "queryform.spatialfilter.operations.bbox"
                         },
                         {
                             "id": "CONTAINS",
@@ -2599,7 +2715,9 @@
                             "id": "settings",
                             "labelId": "gnviewer.settings",
                             "disableIf": "{!context.canManageResourceSettings(state('gnResourceData'))}",
-                            "items": [true]
+                            "items": [
+                                true
+                            ]
                         }
                     ]
                 }
@@ -2947,7 +3065,9 @@
                             "id": "settings",
                             "labelId": "gnviewer.settings",
                             "disableIf": "{!context.canManageResourceSettings(state('gnResourceData'))}",
-                            "items": [true]
+                            "items": [
+                                true
+                            ]
                         }
                     ]
                 }
@@ -3223,7 +3343,9 @@
                             "id": "settings",
                             "labelId": "gnviewer.settings",
                             "disableIf": "{!context.canManageResourceSettings(state('gnResourceData'))}",
-                            "items": [true]
+                            "items": [
+                                true
+                            ]
                         }
                     ]
                 }
@@ -3262,8 +3384,37 @@
                     "containerPosition": "leftColumn",
                     "toolsOptions": {
                         "hideCrossLayer": true,
-                        "hideSpatialFilter": true
-                    }
+                        "useEmbeddedMap": true
+                    },
+                    "spatialPanelExpanded": false,
+                    "spatialOperations": [
+                        {
+                            "id": "INTERSECTS",
+                            "name": "queryform.spatialfilter.operations.intersects"
+                        },
+                        {
+                            "id": "CONTAINS",
+                            "name": "queryform.spatialfilter.operations.contains"
+                        },
+                        {
+                            "id": "WITHIN",
+                            "name": "queryform.spatialfilter.operations.within"
+                        }
+                    ],
+                    "spatialMethodOptions": [
+                        {
+                            "id": "BBOX",
+                            "name": "queryform.spatialfilter.methods.box"
+                        },
+                        {
+                            "id": "Circle",
+                            "name": "queryform.spatialfilter.methods.circle"
+                        },
+                        {
+                            "id": "Polygon",
+                            "name": "queryform.spatialfilter.methods.poly"
+                        }
+                    ]
                 }
             },
             {
@@ -4552,7 +4703,9 @@
                             "id": "settings",
                             "labelId": "gnviewer.settings",
                             "disableIf": "{!context.canManageResourceSettings(state('gnResourceData'))}",
-                            "items": [true]
+                            "items": [
+                                true
+                            ]
                         }
                     ]
                 }
