@@ -35,7 +35,7 @@ const ConnectedDetailsPanel = connect(
         state => state?.gnresource?.selectedLayerDataset || null,
         state => state?.gnresource?.loading || false,
         mapSelector,
-        state => state?.gnresource?.showMapThumbnail || false,
+        state => state?.gnresource?.showMapThumbnail || false
     ], (resource, loading, mapData, showMapThumbnail) => ({
         resource,
         loading,
@@ -68,7 +68,7 @@ const ButtonViewer = ({ onClick, layer, size, status }) => {
 
 const ConnectedButton = connect(
     createSelector([
-        getSelectedLayerDataset,
+        getSelectedLayerDataset
     ], (layer) => ({
         layer
     })),

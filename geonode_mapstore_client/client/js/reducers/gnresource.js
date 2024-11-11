@@ -256,10 +256,10 @@ function gnresource(state = defaultState, action) {
             selectedLayer: action.layer
         };
     case SET_SELECTED_LAYER_DATASET:
-            return {
-                ...state,
-                selectedLayerDataset: state.data.maplayers.find(layer => layer.dataset.pk === parseInt(action.layerId)).dataset
-            };
+        return {
+            ...state,
+            selectedLayerDataset: state.data.maplayers.find(layer => layer.dataset.pk === parseInt(action.layerId, 10)).dataset
+        };
     case UPDATE_LAYER_DATASET:
         const { pk, ...newData } = action.layer;
         let linkedResources = action.layer.linked_resources ?? {};
