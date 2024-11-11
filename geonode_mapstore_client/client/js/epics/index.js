@@ -69,7 +69,7 @@ export const gnFetchMissingLayerData = (action$, { getState } = {}) =>
             const layerResourceDataset = state.gnresource.data.maplayers.find(layer => layer.dataset.pk === parseInt(layerResourceId, 10)).dataset
             return isEmpty(layerResourceDataset.linkedResources)
                 ? Rx.Observable.defer(() =>
-                    getDatasetByPk(layerResourceId, true) // Second argument as true to include linked resources
+                    getDatasetByPk(layerResourceId)
                         .then((layerDataset) => layerDataset)
                         .catch(() => [])
                 ).switchMap((layerDataset) =>
