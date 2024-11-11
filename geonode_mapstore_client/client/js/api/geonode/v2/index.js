@@ -290,7 +290,7 @@ export const getResourceByUuid = (uuid) => {
         .then(({ data }) => data?.resources?.[0]);
 };
 
-export const getDatasetByPk = (pk, include_linked_resources = false) => {
+export const getDatasetByPk = (pk) => {
     return axios.get(getEndpointUrl(DATASETS, `/${pk}`), {
         params: {
             api_preset: [API_PRESET.VIEWER_COMMON, API_PRESET.DATASET]
