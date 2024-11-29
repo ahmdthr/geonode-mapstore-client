@@ -258,7 +258,7 @@ function gnresource(state = defaultState, action) {
     case SET_SELECTED_LAYER_DATASET:
         return {
             ...state,
-            selectedLayerDataset: state.data.maplayers.find(layer => layer.dataset.pk === parseInt(action.layerId, 10)).dataset
+            selectedLayerDataset: state.data?.maplayers?.find(layer => layer.dataset?.pk === parseInt(action.layerId, 10))?.dataset
         };
     case UPDATE_LAYER_DATASET:
         const { pk, ...newData } = action.layer;
@@ -272,8 +272,8 @@ function gnresource(state = defaultState, action) {
             ...state,
             data: {
                 ...state.data,
-                maplayers: state.data.maplayers.map(layer => {
-                    if (layer.dataset.pk === parseInt(pk, 10)) {
+                maplayers: state.data?.maplayers?.map(layer => {
+                    if (layer.dataset?.pk === parseInt(pk, 10)) {
                         return {
                             ...layer,
                             dataset: {

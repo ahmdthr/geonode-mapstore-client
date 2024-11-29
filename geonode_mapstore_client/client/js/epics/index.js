@@ -66,8 +66,9 @@ export const gnFetchMissingLayerData = (action$, { getState } = {}) =>
             const state = getState() || {};
             const layer = getSelectedLayer(state);
             const layerResourceId = layer?.extendedParams?.pk;
-            const layerResourceDataset = state.gnresource.data.maplayers.find(mapLayer => mapLayer.dataset.pk === parseInt(layerResourceId, 10)).dataset;
-            return isEmpty(layerResourceDataset.linkedResources)
+            const layerResourceDataset = state.gnresource.data?.maplayers?.find(mapLayer => mapLayer.dataset?.pk === parseInt(layerResourceId, 10))?.dataset;
+            return layerResourceDataset
+            ? isEmpty(layerResourceDataset?.linkedResources)
                 ? Rx.Observable.defer(() =>
                     getDatasetByPk(layerResourceId)
                         .then((layerDataset) => layerDataset)
@@ -80,7 +81,10 @@ export const gnFetchMissingLayerData = (action$, { getState } = {}) =>
                 )
                 : Rx.Observable.of(
                     setLayerDataset(layerResourceId)
-                );
+                )
+            : Rx.Observable.of(
+                setLayerDataset()
+            )
         });
 
 
