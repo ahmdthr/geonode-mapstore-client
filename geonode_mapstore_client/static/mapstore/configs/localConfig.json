@@ -2332,6 +2332,7 @@
                 }
             },
             {
+                "mandatory": true,
                 "name": "LayerDetailViewer",
                 "cfg": {
                     "containerPosition": "rightOverlay",
